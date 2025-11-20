@@ -6,7 +6,7 @@ const dbConfig = {
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
+  port: process.env.DB_PORT,   // <--- IMPORTANTE
   dialect: process.env.DB_DIALECT || 'mysql',
   logging: false,
 };
@@ -17,6 +17,7 @@ const sequelize = new Sequelize(
   dbConfig.password,
   {
     host: dbConfig.host,
+    port: dbConfig.port,       // <--- AGREGA ESTO
     dialect: dbConfig.dialect,
     logging: dbConfig.logging,
   }
