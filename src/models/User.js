@@ -2,7 +2,7 @@ const { DataTypes } = require('sequelize');
 const sequelize = require('../config/sequelize-config');  // FIX
 const config = require('../config/config');
 
-const User = sequelize.define('user', {
+const User = sequelize.define('User', {
   id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
@@ -46,7 +46,7 @@ const User = sequelize.define('user', {
     allowNull: true,
   },
 }, {
-  tableName: 'Users',
+  tableName: 'users',
   timestamps: true,
 });
 

@@ -29,7 +29,7 @@ const Enrollment = sequelize.define('Enrollment', {
     defaultValue: DataTypes.NOW,
   },
 }, {
-  tableName: 'Enrollments',
+  tableName: 'enrollments',
   timestamps: true,
   indexes: [
     {

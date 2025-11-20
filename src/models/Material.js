@@ -24,7 +24,7 @@ const Material = sequelize.define('Material', {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'Courses',
+      model: 'courses',
       key: 'id',
     },
     onDelete: 'CASCADE',
