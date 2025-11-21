@@ -23,7 +23,11 @@ const app = express();
 // 1. CORS (Frontend en :3001, Backend en :3000)
 // =====================================================
 app.use(cors({
-  origin: 'http://localhost:3001',
+  origin: [
+  "http://localhost:3001",
+  "https://proyectolumina2-henrys-projects-3222a396.vercel.app",
+  "https://nuevolumina-backend.onrender.com"
+],
   credentials: true
 }));
 
