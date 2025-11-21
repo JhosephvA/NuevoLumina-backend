@@ -4,7 +4,7 @@ const config = require('./src/config/config');
 const sequelize = require('./src/config/sequelize-config');
 const { applyRateLimiting } = require('./src/middlewares/rateLimiter');
 
-// Importar asociaciones y modelos
+// Importar modelos
 require('./src/models/associations');
 require('./src/models/User');
 require('./src/models/Course');
@@ -20,22 +20,25 @@ console.log("JWT SECRET:", process.env.JWT_SECRET);
 const app = express();
 
 // =====================================================
-// 1. CORS (Frontend en :3001, Backend en :3000)
+// 1. CORS (DEBE IR ARRIBA Y COMPLETO)
 // =====================================================
 app.use(cors({
   origin: [
-  "http://localhost:3001",
-  "https://proyectolumina2-henrys-projects-3222a396.vercel.app",
-  "https://nuevolumina-backend.onrender.com"
-],
-  credentials: true
+    "http://localhost:3001",
+    "https://proyectolumina2-henrys-projects-3222a396.vercel.app",
+    "https://proyectolumina2.vercel.app",        // 🔥 FALTABA ESTE
+    "https://nuevolumina-backend.onrender.com"
+  ],
+  methods: "GET,POST,PUT,DELETE",
+  allowedHeaders: "Content-Type, Authorization",
+  credentials: true,
 }));
 
 // Middlewares globales
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Rate limiting global
+// Rate limiting
 app.use(applyRateLimiting);
 
 // =====================================================
@@ -49,13 +52,11 @@ const studentRoutes = require('./src/routes/student.routes');
 const materialProfessorRoutes = require("./src/routes/material.professor.routes");
 const materialStudentRoutes = require("./src/routes/material.student.routes");
 
-// Rutas principales
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/professor', professorRoutes);
 app.use('/api/student', studentRoutes);
 
-// Rutas de materiales
 app.use("/api/materials/professor", materialProfessorRoutes);
 app.use("/api/materials/student", materialStudentRoutes);
 
@@ -65,23 +66,21 @@ app.get('/', (req, res) => {
 });
 
 // =====================================================
-// 3. Manejo de errores y 404
+// 3. Errores
 // =====================================================
-app.use((req, res, next) => {
+app.use((req, res) => {
   res.status(404).json({ message: 'Ruta no encontrada' });
 });
 
-// Manejo de errores global
 app.use((err, req, res, next) => {
   console.error("🔥 ERROR GLOBAL:", err.stack);
   res.status(err.status || 500).json({
     message: err.message || 'Error interno del servidor',
-    error: config.env === 'development' ? err : {},
   });
 });
 
 // =====================================================
-// 4. Iniciar servidor + conectar DB
+// 4. Iniciar servidor en Render (FIX CRÍTICO)
 // =====================================================
 async function startServer() {
   try {
@@ -91,10 +90,11 @@ async function startServer() {
     await sequelize.sync({ alter: false });
     console.log('Tablas sincronizadas correctamente.');
 
-    app.listen(config.port, () => {
-      console.log(
-        `Servidor backend corriendo en http://localhost:${config.port} (modo ${config.env})`
-      );
+    // 🔥 Render requiere esto
+    const PORT = process.env.PORT || config.port;
+
+    app.listen(PORT, () => {
+      console.log(`Servidor backend corriendo en puerto ${PORT}`);
     });
   } catch (error) {
     console.error('❌ No se pudo conectar a la base de datos:', error);
@@ -103,5 +103,5 @@ async function startServer() {
 }
 
 startServer();
-module.exports = app;
 
+module.exports = app;
