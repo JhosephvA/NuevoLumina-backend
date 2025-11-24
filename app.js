@@ -35,9 +35,6 @@ app.use(cors({
   optionsSuccessStatus: 200
 }));
 
-// 🔥 FIX CRÍTICO: Render necesita responder explícitamente a OPTIONS
-app.options("(.*)", cors());
-
 
 // Middlewares globales
 app.use(express.json());
