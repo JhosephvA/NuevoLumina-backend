@@ -36,7 +36,7 @@ app.use(cors({
 }));
 
 // 🔥 FIX CRÍTICO: Render necesita responder explícitamente a OPTIONS
-app.options("*", cors());
+app.options("(.*)", cors());
 
 
 // Middlewares globales
