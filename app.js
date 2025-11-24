@@ -27,6 +27,7 @@ app.use(cors({
     "http://localhost:3001",
     "https://proyectolumina2-henrys-projects-3222a396.vercel.app",
     "https://proyectolumina2.vercel.app",
+    "https://proyectolumina2-git-main-henrys-projects-3222a396.vercel.app"
   ],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
@@ -34,6 +35,7 @@ app.use(cors({
   preflightContinue: false,
   optionsSuccessStatus: 200
 }));
+
 
 
 // Middlewares globales
