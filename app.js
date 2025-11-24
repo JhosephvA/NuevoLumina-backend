@@ -20,19 +20,24 @@ console.log("JWT SECRET:", process.env.JWT_SECRET);
 const app = express();
 
 // =====================================================
-// 1. CORS (DEBE IR ARRIBA Y COMPLETO)
+// 1. CORS (ESTA ES LA CONFIGURACIÓN CORRECTA PARA RENDER)
 // =====================================================
 app.use(cors({
   origin: [
     "http://localhost:3001",
     "https://proyectolumina2-henrys-projects-3222a396.vercel.app",
-    "https://proyectolumina2.vercel.app",        // 🔥 FALTABA ESTE
-    "https://nuevolumina-backend.onrender.com"
+    "https://proyectolumina2.vercel.app",
   ],
-  methods: "GET,POST,PUT,DELETE",
-  allowedHeaders: "Content-Type, Authorization",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
+  preflightContinue: false,
+  optionsSuccessStatus: 200
 }));
+
+// 🔥 FIX CRÍTICO: Render necesita responder explícitamente a OPTIONS
+app.options("*", cors());
+
 
 // Middlewares globales
 app.use(express.json());
