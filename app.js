@@ -20,10 +20,11 @@ console.log("JWT SECRET:", process.env.JWT_SECRET);
 const app = express();
 
 // =====================================================
-// 1. CORS (ESTA ES LA CONFIGURACIÓN CORRECTA PARA RENDER)
+// 1. CORS (configuración correcta para Render)
 // =====================================================
 app.use(cors({
   origin: [
+    "http://localhost:3000",
     "http://localhost:3001",
     "https://proyectolumina2-henrys-projects-3222a396.vercel.app",
     "https://proyectolumina2.vercel.app",
@@ -35,8 +36,6 @@ app.use(cors({
   preflightContinue: false,
   optionsSuccessStatus: 200
 }));
-
-
 
 // Middlewares globales
 app.use(express.json());
@@ -56,13 +55,17 @@ const studentRoutes = require('./src/routes/student.routes');
 const materialProfessorRoutes = require("./src/routes/material.professor.routes");
 const materialStudentRoutes = require("./src/routes/material.student.routes");
 
+// Auth y Admin
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/professor', professorRoutes);
-app.use('/api/student', studentRoutes);
 
-app.use("/api/materials/professor", materialProfessorRoutes);
-app.use("/api/materials/student", materialStudentRoutes);
+// Profesor
+app.use('/api/professor', professorRoutes);
+app.use('/api/professor', materialProfessorRoutes);
+
+// Estudiante
+app.use('/api/student', studentRoutes);
+app.use('/api/student', materialStudentRoutes);
 
 // Ruta prueba
 app.get('/', (req, res) => {
@@ -84,7 +87,7 @@ app.use((err, req, res, next) => {
 });
 
 // =====================================================
-// 4. Iniciar servidor en Render (FIX CRÍTICO)
+// 4. Iniciar servidor en Render
 // =====================================================
 async function startServer() {
   try {
@@ -94,9 +97,7 @@ async function startServer() {
     await sequelize.sync({ alter: false });
     console.log('Tablas sincronizadas correctamente.');
 
-    // 🔥 Render requiere esto
     const PORT = process.env.PORT || config.port;
-
     app.listen(PORT, () => {
       console.log(`Servidor backend corriendo en puerto ${PORT}`);
     });

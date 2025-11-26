@@ -5,8 +5,7 @@ const progressController = require("../controllers/progress.controller");
 const { requireAuth, requireRole } = require("../middlewares/auth.middleware");
 const { User, Course, Submission, Task } = require("../models/associations");
 const config = require("../config/config");
-const materialRoutes = require("./material.routes");
-
+const materialRoutes = require("./material.professor.routes"); // 🔹 CORREGIDO
 
 const router = express.Router();
 
@@ -59,6 +58,19 @@ router.put("/tasks/:id", taskController.updateTask);
 router.delete("/tasks/:id", taskController.deleteTask);
 
 /* ==========================================
+   TAREAS POR CURSO (NECESARIAS PARA EL FRONTEND)
+========================================== */
+router.get("/courses/:courseId/tasks", taskController.getTasksByCourse);
+router.post(
+  "/courses/:courseId/tasks",
+  (req, res, next) => {
+    req.body.courseId = req.params.courseId; // asegurar courseId para el controller
+    next();
+  },
+  taskController.createTask
+);
+
+/* ==========================================
    ENTREGAS
 ========================================== */
 router.get(
@@ -74,7 +86,6 @@ router.get("/grades", async (req, res) => {
   try {
     const profesorId = req.user.id;
 
-    // Obtener cursos impartidos por este profesor
     const courses = await Course.findAll({
       where: { profesorId },
       attributes: ["id"],
@@ -82,11 +93,8 @@ router.get("/grades", async (req, res) => {
 
     const courseIds = courses.map((c) => c.id);
 
-    if (courseIds.length === 0) {
-      return res.json([]); // No hay cursos = no hay notas
-    }
+    if (courseIds.length === 0) return res.json([]);
 
-    // 🔹 Traer todas las entregas con estudiante, tarea y curso, filtrando solo estudiantes
     const grades = await Submission.findAll({
       include: [
         {
@@ -95,24 +103,19 @@ router.get("/grades", async (req, res) => {
           where: { courseId: courseIds },
           attributes: ["id", "titulo", "courseId"],
           include: [
-            {
-              model: Course,
-              as: "Curso",
-              attributes: ["id", "nombre"],
-            },
+            { model: Course, as: "Curso", attributes: ["id", "nombre"] },
           ],
         },
         {
           model: User,
           as: "Estudiante",
           attributes: ["id", "nombre", "apellido", "email", "rol"],
-          where: { rol: "estudiante" }, // 🔹 FILTRO: solo estudiantes
+          where: { rol: "estudiante" },
         },
       ],
       attributes: ["id", "nota", "archivoURL", "fechaEntrega"],
     });
 
-    // Formatear respuesta para frontend
     const formattedGrades = grades.map((g) => ({
       id: g.id,
       nota: g.nota,
@@ -153,6 +156,6 @@ router.get("/ai/student/:studentId", progressController.consultAIModule);
 /* ==========================================
    🔹 Materiales
 ========================================== */
-router.use('/materials', materialRoutes);
+router.use("/materials", materialRoutes);
 
 module.exports = router;
