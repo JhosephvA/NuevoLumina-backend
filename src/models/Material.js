@@ -20,21 +20,26 @@ const Material = sequelize.define('Material', {
     type: DataTypes.STRING,
     allowNull: true,
   },
+  semana: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    defaultValue: null,
+  },
   courseId: {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'courses',
-      key: 'id',
+      model: "Courses",
+      key: "id",
     },
-    onDelete: 'CASCADE',
+    onDelete: "CASCADE",
   },
 }, {
-  tableName: 'Materials',
+  tableName: "Materials",
   timestamps: true,
 });
 
-Course.hasMany(Material, { foreignKey: 'courseId', as: 'materiales' });
-Material.belongsTo(Course, { foreignKey: 'courseId', as: 'curso' });
+Course.hasMany(Material, { foreignKey: "courseId", as: "materiales" });
+Material.belongsTo(Course, { foreignKey: "courseId", as: "curso" });
 
 module.exports = Material;

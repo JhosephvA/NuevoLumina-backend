@@ -1,5 +1,6 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/sequelize-config');
+const Course = require('./Course');
 
 const Task = sequelize.define('Task', {
   id: {
@@ -11,9 +12,10 @@ const Task = sequelize.define('Task', {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'courses',
-      key: 'id',
+      model: "Courses",
+      key: "id",
     },
+    onDelete: "CASCADE",
   },
   titulo: {
     type: DataTypes.STRING(255),
@@ -23,13 +25,21 @@ const Task = sequelize.define('Task', {
     type: DataTypes.TEXT,
     allowNull: true,
   },
+  semana: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    defaultValue: null,
+  },
   fechaEntrega: {
     type: DataTypes.DATE,
     allowNull: false,
   },
 }, {
-  tableName: 'Tasks',
+  tableName: "Tasks",
   timestamps: true,
 });
+
+Course.hasMany(Task, { foreignKey: "courseId", as: "tareas" });
+Task.belongsTo(Course, { foreignKey: "courseId", as: "curso" });
 
 module.exports = Task;

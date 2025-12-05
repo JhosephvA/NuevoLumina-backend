@@ -2,16 +2,16 @@ const Material = require('../models/Material');
 const Course = require('../models/Course');
 const Enrollment = require("../models/Enrollment");
 
-// 📌 Crear material (solo profesor)
+// Crear material (solo profesor)
 exports.createMaterial = async (req, res) => {
   try {
-    const { titulo, descripcion, archivoUrl } = req.body;
-    const courseId = req.body.courseId || req.params.courseId; // ✅ usar params si no viene en body
-    const professorId = req.user.id; // viene del token
+    const { titulo, descripcion, archivoUrl, semana } = req.body;
+    const courseId = req.body.courseId || req.params.courseId;
+    const profesorId = req.user.id;
 
-    // 1️⃣ Verificar que el curso pertenezca al profesor
+    // Validar curso del profesor
     const course = await Course.findOne({
-      where: { id: courseId, profesorId: professorId }
+      where: { id: courseId, profesorId }
     });
 
     if (!course) {
@@ -20,50 +20,34 @@ exports.createMaterial = async (req, res) => {
       });
     }
 
-    // 2️⃣ Crear el material
+    // Crear material
     const material = await Material.create({
       titulo,
       descripcion,
       archivoUrl,
-      courseId
+      courseId,
+      semana: semana ? Number(semana) : null,
     });
 
-    res.status(201).json(material);
+    return res.status(201).json(material);
   } catch (error) {
     console.error("❌ Error en createMaterial:", error);
-    res.status(500).json({ 
-      message: "Error al crear material", 
-      error: error.message || error.toString() 
+    return res.status(500).json({
+      message: "Error al crear material",
+      error: error.message
     });
   }
 };
 
-// 📌 Listar TODOS los materiales (opcional)
-exports.getMaterials = async (req, res) => {
-  try {
-    const materiales = await Material.findAll({
-      include: [{ model: Course, as: "curso" }],
-      order: [["createdAt", "DESC"]],
-    });
-
-    res.json(materiales);
-  } catch (error) {
-    console.error("❌ Error en getMaterials:", error);
-    res.status(500).json({ 
-      message: "Error al obtener materiales", 
-      error: error.message || error.toString() 
-    });
-  }
-};
-
-// 📌 Obtener materiales por curso (profesor o estudiante)
+// Obtener materiales por curso (con filtro por semana)
 exports.getMaterialsByCourse = async (req, res) => {
   try {
     const { courseId } = req.params;
+    const { semana } = req.query;
     const userId = req.user.id;
     const userRole = req.user.rol;
 
-    // 🔹 Si es estudiante → verificar inscripción
+    // Estudiante: validar inscripción
     if (userRole === "estudiante") {
       const estaInscrito = await Enrollment.findOne({
         where: { estudianteId: userId, courseId }
@@ -74,7 +58,7 @@ exports.getMaterialsByCourse = async (req, res) => {
       }
     }
 
-    // 🔹 Si es profesor → validar que sea su curso
+    // Profesor: validar curso propio
     if (userRole === "profesor") {
       const curso = await Course.findOne({
         where: { id: courseId, profesorId: userId }
@@ -85,52 +69,52 @@ exports.getMaterialsByCourse = async (req, res) => {
       }
     }
 
-    // 🔹 Obtener materiales
+    // FILTRO por semana en BD
+    const filters = { courseId };
+    if (semana) filters.semana = Number(semana);
+
     const materiales = await Material.findAll({
-      where: { courseId },
-      order: [["createdAt", "DESC"]]
+      where: filters,
+      order: [["semana", "ASC"], ["createdAt", "ASC"]],
     });
 
-    res.json(materiales);
+    return res.json(materiales);
   } catch (error) {
     console.error("❌ Error en getMaterialsByCourse:", error);
-    res.status(500).json({ 
-      message: "Error al obtener materiales", 
-      error: error.message || error.toString() 
+    return res.status(500).json({
+      message: "Error al obtener materiales",
+      error: error.message
     });
   }
 };
 
-// 📌 Eliminar material (solo profesor)
+// Eliminar material
 exports.deleteMaterial = async (req, res) => {
   try {
     const { id } = req.params;
-    const professorId = req.user.id;
+    const profesorId = req.user.id;
 
-    // Buscar material
     const material = await Material.findByPk(id);
-    if (!material) {
+    if (!material)
       return res.status(404).json({ message: "Material no encontrado" });
-    }
 
-    // Verificar que el material pertenece a un curso del profesor
     const course = await Course.findOne({
       where: { id: material.courseId, profesorId }
     });
 
-    if (!course) {
+    if (!course)
       return res.status(403).json({
-        message: "No puedes eliminar material de un curso que no te pertenece",
+        message: "No puedes eliminar material de un curso que no te pertenece"
       });
-    }
 
     await Material.destroy({ where: { id } });
-    res.json({ message: "Material eliminado correctamente" });
+
+    return res.json({ message: "Material eliminado correctamente" });
   } catch (error) {
     console.error("❌ Error en deleteMaterial:", error);
-    res.status(500).json({ 
-      message: "Error al eliminar material", 
-      error: error.message || error.toString() 
+    return res.status(500).json({
+      message: "Error al eliminar material",
+      error: error.message
     });
   }
 };

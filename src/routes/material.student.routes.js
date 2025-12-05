@@ -6,19 +6,20 @@ const Course = require("../models/Course");
 const Enrollment = require("../models/Enrollment");
 const config = require("../config/config");
 
-// 🔐 Solo estudiantes
+// Solo estudiantes
 router.use(requireAuth, requireRole([config.roles.STUDENT]));
 
-/* ======================================================
-   LISTAR MATERIALES DEL CURSO
+/* ============================================
+   LISTAR MATERIALES DEL CURSO (con ?semana=X)
    GET /api/student/courses/:courseId/materials
-====================================================== */
+============================================ */
 router.get("/courses/:courseId/materials", async (req, res) => {
   try {
     const studentId = req.user.id;
     const { courseId } = req.params;
+    const { semana } = req.query;
 
-    // 1️⃣ Validar que está matriculado
+    // 1️⃣ Validar inscripción
     const enrolled = await Enrollment.findOne({
       where: { estudianteId: studentId, courseId }
     });
@@ -27,18 +28,22 @@ router.get("/courses/:courseId/materials", async (req, res) => {
       return res.status(403).json({ message: "No estás matriculado en este curso" });
     }
 
-    // 2️⃣ Traer materiales del curso
+    // 2️⃣ Filtro por semana (si se pasa)
+    const filters = { courseId };
+    if (semana) filters.semana = Number(semana);
+
+    // 3️⃣ Obtener materiales
     const materiales = await Material.findAll({
-      where: { courseId },
+      where: filters,
       include: [{ model: Course, as: "curso" }],
-      order: [["createdAt", "DESC"]]
+      order: [["semana", "ASC"], ["createdAt", "ASC"]]
     });
 
-    res.json(materiales);
+    return res.json(materiales);
 
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error al obtener materiales" });
+    console.error("❌ Error material.student.routes:", error);
+    return res.status(500).json({ message: "Error al obtener materiales" });
   }
 });
 
